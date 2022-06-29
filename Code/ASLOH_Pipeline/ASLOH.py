@@ -159,9 +159,9 @@ def Igvtools(TumorBam,LOHCandidateVariant):
 		(sChr, nPosition,sRef,sAlt,sSS)=(t[5],t[6],t[8],t[9],t[10])
 		sKey="_".join([sChr, nPosition,sRef,sAlt,sSS])
 		os.system(IGVtools+" count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
-		#print("igvtools count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
+		
 	" IGVtools/"+ sKey + ".bam.wig hg19")
-		#break
+		
 
 
 
@@ -175,7 +175,7 @@ def ParseIGVtools(sFile,dIGVdict):
 	fp.readline()
 	sLine=fp.readline()
 	sLine=sLine.strip()
-	#17_72436932_G_C_Somatic_het
+	
 	sFile=sFile.split("/")[-1]
 	sKey=sFile.split(".")[0]
 	(sChr,nPosition,sRef,sAlt,sSS,sGenotype)=sKey.split("_")
@@ -197,17 +197,17 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 	Igvtools(TumorBam,LOHCandidateVariant)
 	
 	dIGVdict=dict()
-	#IGVtools/"+sID+"/"+ sKey + ".bam.wig
+	
 	lIGVToolsFiles=glob.glob("IGVtools/"+"*.bam.wig")
 	
 	for sIgvcall in lIGVToolsFiles:
 		ParseIGVtools(sIgvcall,dIGVdict)
-	#print(dIGVdict["1_17265560_C_T_Germline_het"])
+	
 	fp=open(LOHCandidateVariant)
 	
 	fout=open(ASLOHOutput,"w")
 	fout.write("Chr\tPosition\tRef\tAlt\tSS\tRefreadinTumor\tAltreadinTumor\tAARF\tCNV\n")
-	#for sLin
+	
 	for sLine in fp.readlines():
 		sLine=sLine.strip()
 		t=sLine.split("\t")
@@ -246,7 +246,7 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 					pass	
 			else:
 				pass
-				#fout.write("{0}\n".format("\t".join(["0","0","0",sSS])))
+				
 		except KeyError:
 			pass
 	
