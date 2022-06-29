@@ -239,7 +239,7 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 							sSSwithCNV=sSS
 					else:
 						pass
-						#sys.exit()
+						
 					fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
 					fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
 				except ZeroDivisionError:
