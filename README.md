@@ -4,10 +4,10 @@
 Dear users, 
 This repository includes
 
-1. R Code for Figures
+1. Analysis script
 
-2. Analysis script
+2. R Code for Figures
 
 3. Data
 
-
+If you have any question, please leave comments.
