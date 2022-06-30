@@ -162,9 +162,7 @@ def Igvtools(TumorBam,LOHCandidateVariant):
 		
 			sKey="_".join([sChr, nPosition,sRef,sAlt])
 			os.system(IGVtools+" count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
-			#print("igvtools count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
 		" IGVtools/"+ sKey + ".bam.wig hg19")
-		#break
 
 
 
@@ -178,7 +176,6 @@ def ParseIGVtools(sFile,dIGVdict):
 	fp.readline()
 	sLine=fp.readline()
 	sLine=sLine.strip()
-	#17_72436932_G_C_Somatic_het
 	sFile=sFile.split("/")[-1]
 	sKey=sFile.split(".")[0]
 	(sChr,nPosition,sRef,sAlt)=sKey.split("_")
@@ -200,17 +197,14 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 	Igvtools(TumorBam,LOHCandidateVariant)
 	
 	dIGVdict=dict()
-	#IGVtools/"+sID+"/"+ sKey + ".bam.wig
 	lIGVToolsFiles=glob.glob("IGVtools/"+"*.bam.wig")
 	
 	for sIgvcall in lIGVToolsFiles:
 		ParseIGVtools(sIgvcall,dIGVdict)
-	#print(dIGVdict["1_17265560_C_T_Germline_het"])
 	fp=open(LOHCandidateVariant)
 	
 	fout=open(ASLOHOutput,"w")
 	fout.write("Chr\tPosition\tRef\tAlt\tSS\tRefreadinTumor\tAltreadinTumor\tAARF\tCNV\n")
-	#for sLin
 	for sLine in fp.readlines():
 		sLine=sLine.strip()
 		t=sLine.split("\t")
@@ -225,7 +219,6 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 					
 					(sRefinTumor,sAltinTumor)=(dIGVdict[sKey][sRef],dIGVdict[sKey][sAlt])
 					try:
-						#fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
 						if float(sRefinTumor)==0:
 							sAllreads=dIGVdict[sKey].values()
 							sTotalRead=sum(map(float,sAllreads))
@@ -242,14 +235,12 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 								sSSwithCNV=sSS
 						else:
 							pass
-							#sys.exit()
 						fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
 						fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
 					except ZeroDivisionError:
 						pass	
 				else:
 					pass
-					#fout.write("{0}\n".format("\t".join(["0","0","0",sSS])))
 			except KeyError:
 				pass
 		
