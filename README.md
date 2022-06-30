@@ -1,4 +1,4 @@
-# [Prognostic significance of allele-specific loss of heterozygosity in triple-negative breast cancer] (https://github.com/leefall/ASLOH)
+# [Prognostic significance of allele-specific loss of heterozygosity in triple-negative breast cancer](https://github.com/leefall/ASLOH)
 <br>
 
 Dear users, 
