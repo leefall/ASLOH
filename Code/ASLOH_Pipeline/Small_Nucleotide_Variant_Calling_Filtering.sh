@@ -46,7 +46,7 @@ $GATK4 --java-options "-Xmx8G" VariantFiltration \
 
 
 $GATK4 --java-options "-Xmx8G" VariantFiltration \
---tmp-dir=$TMP\
+--tmp-dir=$TMP \
 -V INDEL_$Output.vcf.gz  \
 -filter "QD < 2.0" --filter-name "QD2" \
 -filter "DP < 10.0" --filter-name "LowDP10" \
