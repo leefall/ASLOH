@@ -19,7 +19,7 @@ $CNVFACETS \
 -vcf $dbsnp \
 --targets $Targetbed \
 -g hg19 \
--o SV_$Output
+-o CNV_$Output
 
 
 
