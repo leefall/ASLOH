@@ -2,24 +2,24 @@
 import gzip
 import os
 import sys
-
+import glob
 #Input
-InputCNVvcf=#Output.vcf.gz from CNV_FACETS
-LOHRegion=#Output of LOH region
-InputVCF=#Filtered VCF from Small_Nucleotide_Variant_Calling_Filtering.sh
-TumorBam=#Tumor Bam File
+InputCNVvcf= #Output.vcf.gz from CNV_FACETS
+LOHRegion= #Output of LOH region
+InputVCF= #Filtered VCF from Small_Nucleotide_Variant_Calling_Filtering.sh
+TumorBam= #Tumor Bam File
 
 
 #Output
-FilteredVCFbed=#bed format output of filtered VCF 
-LOHCandidateVariant=#Intersected SNV with LOH region
-ASLOHOutput=#
+FilteredVCFbed= #bed format output of filtered VCF 
+LOHCandidateVariant= #Intersected SNV with LOH region
+ASLOHOutput= #
 
 
 
 #Used Tool
 Bedtools=#Path of Bedtools
-IGVtools=#Path of igvtools
+IGVtools= #Path of igvtools
 
 
 
@@ -54,6 +54,7 @@ class SNV:
 		if sChr=="X":
 			self.nChromosome=23
 		else:
+			sChr=sChr.replace("chr","")
 			self.nChromosome=int(sChr)
 	
 		
@@ -62,7 +63,7 @@ class SNV:
 
 
 
-def ExtractingLOHRegion(InputCNVvcf):
+def Extracting_LOH_Region(InputCNVvcf):
 	
 	fp=gzip.open(InputCNVvcf,"rt")
 	fout=open(LOHRegion,"w")
@@ -77,9 +78,9 @@ def ExtractingLOHRegion(InputCNVvcf):
 			if sFilter=="PASS":
 				
 				sINFO=t[-1]
-				lINFO=sINFO.split(";")
+				lCNVINFO=sINFO.split(";")
 				(sCNVTYPE,nTCM_EM,nEndPosition)=(lCNVINFO[0],lCNVINFO[-3],lCNVINFO[2])
-				(sCNVTYPE,nTCM_EM,nEndPosition)=(sSVTYPE.split("=")[1],nTCM_EM.split("=")[1],nEndPosition.split("=")[1])
+				(sCNVTYPE,nTCM_EM,nEndPosition)=(sCNVTYPE.split("=")[1],nTCM_EM.split("=")[1],nEndPosition.split("=")[1])
 				if ((sCNVTYPE=="DUP-LOH") or (sCNVTYPE=="HEMIZYG") or (sCNVTYPE=="LOH")):
 					fout.write("{0}\n".format("\t".join([t[0].replace("chr",""),t[1],nEndPosition,sCNVTYPE,nTCM_EM])))
 				
@@ -92,9 +93,9 @@ def ExtractingLOHRegion(InputCNVvcf):
 		
 	
 
-def LowQuality_Variant_Filtering(FilteredVCF):
+def LowQuality_Variant_Filtering(InputVCF):
 	
-	fp=open(InputVCF)
+	fp=gzip.open(InputVCF,"rt")
 	fout=open(FilteredVCFbed,"w")
 	lSNV=[]
 	for sLine in fp.readlines():
@@ -119,8 +120,8 @@ def LowQuality_Variant_Filtering(FilteredVCF):
 	lSNV.sort(key = lambda x: x.nChromosome)
 	for sVariant in lSNV:
 	
-		fout.write("{0}\n".format("\t".join([sVariant.sChromosome,\
-		sVariant.nPosition,sVariant.nPosition,sVariant.sReferenceAllele,sVariant.sAlternativeAllele,sVariant.sGenotype])))
+		fout.write("{0}\n".format("\t".join(map(str,[sVariant.sChromosome.replace("chr",""),\
+		sVariant.nPosition,sVariant.nPosition,sVariant.sReferenceAllele,sVariant.sAlternativeAllele,sVariant.sGenotype]))))
 	
 	fout.close()
 	
@@ -142,25 +143,27 @@ def Intersection_for_LOH_Candidate_Variant(FilteredVCFbed,LOHRegion):
 def Igvtools(TumorBam,LOHCandidateVariant):
 	
 	
-	sID=sFile.split(".")[0]
+	
 	try:
 		os.mkdir("IGVtools/")
 	except:
 		pass
 	
-	fp=open("Intersection/Intersected_"+sFile)
+	fp=open(LOHCandidateVariant)
 	
-	sBamFile="/mnt/towel/TCGA/Finalpostrecalbam/"+sID+"-T.bam"
+	sBamFile=TumorBam
 	
 	
 	for sLine in fp.readlines():
 		sLine=sLine.strip()
 		t=sLine.split("\t")
 		(sChr, nPosition,sRef,sAlt,sSS)=(t[5],t[6],t[8],t[9],t[10])
-		sKey="_".join([sChr, nPosition,sRef,sAlt,sSS])
-		os.system(IGVtools+" count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
-		#print("igvtools count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
-	" IGVtools/"+ sKey + ".bam.wig hg19")
+		if sSS=="0/1":
+		
+			sKey="_".join([sChr, nPosition,sRef,sAlt])
+			os.system(IGVtools+" count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
+			#print("igvtools count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
+		" IGVtools/"+ sKey + ".bam.wig hg19")
 		#break
 
 
@@ -178,7 +181,7 @@ def ParseIGVtools(sFile,dIGVdict):
 	#17_72436932_G_C_Somatic_het
 	sFile=sFile.split("/")[-1]
 	sKey=sFile.split(".")[0]
-	(sChr,nPosition,sRef,sAlt,sSS,sGenotype)=sKey.split("_")
+	(sChr,nPosition,sRef,sAlt)=sKey.split("_")
 	try:
 		(nPos, nA, nC, nG, nT, nN, nDel, nIns)=sLine.split("\t")
 		dIGVdict[sKey]={"A":nA,"G":nG,"C":nC,"T":nT}
@@ -212,46 +215,46 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 		sLine=sLine.strip()
 		t=sLine.split("\t")
 		(sChr, nPosition,sRef,sAlt,sSS)=(t[5],t[6],t[8],t[9],t[10])
-		sKey="_".join([sChr, nPosition,sRef,sAlt,sSS])
+		sKey="_".join([sChr, nPosition,sRef,sAlt])
 		
-		
-		try:
-			
-			if not dIGVdict[sKey]=="Deletion":
+		if sSS=="0/1":
+			try:
 				
-				
-				(sRefinTumor,sAltinTumor)=(dIGVdict[sKey][sRef],dIGVdict[sKey][sAlt])
-				try:
-					#fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
-					if float(sRefinTumor)==0:
-						sAllreads=dIGVdict[sKey].values()
-						sTotalRead=sum(map(float,sAllreads))
-						nAARF=float(sAltinTumor)/float(sTotalRead)
-					else:
-						nAARF=float(sAltinTumor)/(float(sRefinTumor)+float(sAltinTumor))
-					if "0/1" in sSS:
+				if not dIGVdict[sKey]=="Deletion":
 					
-						if nAARF<0.2:
-							sSSwithCNV="RLOH"
-						elif nAARF>0.8:
-							sSSwithCNV="LOH"
+					
+					(sRefinTumor,sAltinTumor)=(dIGVdict[sKey][sRef],dIGVdict[sKey][sAlt])
+					try:
+						#fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
+						if float(sRefinTumor)==0:
+							sAllreads=dIGVdict[sKey].values()
+							sTotalRead=sum(map(float,sAllreads))
+							nAARF=float(sAltinTumor)/float(sTotalRead)
 						else:
-							sSSwithCNV=sSS
-					else:
-						pass
-						#sys.exit()
-					fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
-					fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
-				except ZeroDivisionError:
-					pass	
-			else:
+							nAARF=float(sAltinTumor)/(float(sRefinTumor)+float(sAltinTumor))
+						if "0/1" in sSS:
+						
+							if nAARF<0.2:
+								sSSwithCNV="RLOH"
+							elif nAARF>0.8:
+								sSSwithCNV="LOH"
+							else:
+								sSSwithCNV=sSS
+						else:
+							pass
+							#sys.exit()
+						fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
+						fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
+					except ZeroDivisionError:
+						pass	
+				else:
+					pass
+					#fout.write("{0}\n".format("\t".join(["0","0","0",sSS])))
+			except KeyError:
 				pass
-				#fout.write("{0}\n".format("\t".join(["0","0","0",sSS])))
-		except KeyError:
-			pass
-	
-	
-	
+		
+		
+		
 
 
 
@@ -260,8 +263,8 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 
 if __name__=="__main__":
 	
-	Extracting_LOH_Region(CNVOutput)
-	LowQuality_Variant_Filtering(FilteredVCF)
+	Extracting_LOH_Region(InputCNVvcf)
+	LowQuality_Variant_Filtering(InputVCF)
 	Intersection_for_LOH_Candidate_Variant(FilteredVCFbed,LOHRegion)
 	Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant)
 	
