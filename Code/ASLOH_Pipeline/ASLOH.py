@@ -148,9 +148,9 @@ def Igvtools(TumorBam,LOHCandidateVariant):
 	except:
 		pass
 	
-	fp=open("Intersection/Intersected_"+sFile)
+	fp=open(LOHCandidateVariant)
 	
-	sBamFile="/mnt/towel/TCGA/Finalpostrecalbam/"+sID+"-T.bam"
+	sBamFile=TumorBam
 	
 	
 	for sLine in fp.readlines():
