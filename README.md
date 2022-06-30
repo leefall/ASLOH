@@ -2,12 +2,12 @@
 <br>
 
 Dear users, 
-This repository includes
+this repository includes
 
-1. R Code for Figures
+1. Analysis scripts including allele-specific loss of heterozygosity pipeline (ASLOH)
 
-2. Analysis script
+2. R Codes for Figures
 
 3. Data
 
-
+If you have any question, please leave comments.

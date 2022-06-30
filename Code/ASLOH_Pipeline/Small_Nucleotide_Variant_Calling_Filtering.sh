@@ -5,14 +5,13 @@ NormalBam=#Normal Bam File
 TMP=#Temporal Directory
 Reference=#ucsc hg19
 Output=#OutputName
-Targetbed=#Target bed
+
 
 
 $GATK4 --java-options "-Xmx8G" HaplotypeCaller \
 --tmp-dir=$TMP \
 -R $Reference \
 -I $NormalBam \
--L $Targetbed \
 -O $Output.vcf.gz 
 
 
