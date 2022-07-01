@@ -16,4 +16,3 @@ d3 <- as.dist((1 - data[,-1]))
 clust3 <- hclust(d3, method = "average")
 plot(clust3, lwd = 2, lty = 1,cex=0.45, xlab="Samples", sub = "",  ylab="Distance (1-Pearson correlation)",hang = -1, axes = FALSE,main="mTNBC of Gustave Roussy")
 
-segments(c(0.4,0.4,0.5,0.5),c(0,0,0.1,0.1),c(0.5,0.5,0.4,0.4),c(0,0.1,0.1,0))

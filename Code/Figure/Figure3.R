@@ -117,7 +117,7 @@ mydata <- data.frame(Filtering=c("Non-Filtered","Non-Filtered","Non-Filtered","N
 mydata$Algorithm<-factor(mydata$Algorithm,levels = c("ASLOH","Varscan2","SomaticSniper","SNVsniffer","Sequenza"))
 mydata$Filtering<-factor(mydata$Filtering,levels = c("Non-Filtered","In silico","eQTL"))
 
-p<- ggplot(mydata, aes(x=Filtering, y=Mean, fill=Algorithm)) + 
+ggplot(mydata, aes(x=Filtering, y=Mean, fill=Algorithm)) + 
   geom_bar(stat="identity", color="black", 
            position=position_dodge()) +
   geom_errorbar(aes(ymin=Mean-SD, ymax=Mean+SD), width=.2,

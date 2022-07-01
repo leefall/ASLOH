@@ -218,6 +218,6 @@ ssplots[[3]]<-MYH13.TNBCsurvp.SS
 ssplots[[2]]<-SH2D3C.TNBCsurvp.SS
 ssplots[[4]]<-DYX1C1.TNBCsurvp.SS
 
-ss<-arrange_ggsurvplots(ssplots, print = TRUE,
+arrange_ggsurvplots(ssplots, print = TRUE,
                         ncol = 2, nrow = 2, risk.table.height = 0.2)
 

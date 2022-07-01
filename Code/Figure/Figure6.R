@@ -111,6 +111,6 @@ ssplots[[1]]<-TCGA.TNBCsurvp.SS
 ssplots[[2]]<-survp.SS
 
 
-ss<-arrange_ggsurvplots(ssplots, print = TRUE,
+arrange_ggsurvplots(ssplots, print = TRUE,
                         ncol = 2, nrow = 1, risk.table.height = 0.2)
 
