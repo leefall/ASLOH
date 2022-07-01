@@ -24,8 +24,8 @@ this repository includes
 * igvtools 2.3.8
 
 ### Additional files
-* Reference sequence file ex) ucsc.hg19.fasta
-* Common variant file ex) dbsnp\_138.hg19.vcf.gz
+* Reference sequence file (ucsc.hg19.fasta)
+* Common variant file (dbsnp\_138.hg19.vcf.gz)
 
 
 
