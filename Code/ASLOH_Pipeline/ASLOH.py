@@ -318,7 +318,6 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 					
 				else:
 					pass
-					#fout.write("{0}\n".format("\t".join(["0","0","0",sSS])))
 			except KeyError:
 				pass
 		
