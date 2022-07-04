@@ -4,22 +4,23 @@ import os
 import sys
 import glob
 #Input
-InputCNVvcf= #Output.vcf.gz from CNV_FACETS
-LOHRegion= #Output of LOH region
-InputVCF= #Filtered VCF from Small_Nucleotide_Variant_Calling_Filtering.sh
-TumorBam= #Tumor Bam File
+InputCNVvcf="../../Data/Exampledata_for_ASLOH/Example_CNV.vcf.gz" #Output.vcf.gz from CNV_FACETS
+InputVCF="../../Data/Exampledata_for_ASLOH/Example_SNV.vcf.gz" #Filtered VCF from Small_Nucleotide_Variant_Calling_Filtering.sh
+TumorBam="../../Data/Exampledata_for_ASLOH/Example_TumorBam.bam" #Tumor Bam File
 
 
 #Output
-FilteredVCFbed= #bed format output of filtered VCF 
-LOHCandidateVariant= #Intersected SNV with LOH region
-ASLOHOutput= #
+sOutputPrefix="Example"
+LOHRegion="LOHRegion_"+sOutputPrefix #Output of LOH region
+FilteredVCFbed="FilteredBed_"+sOutputPrefix #bed format output of filtered VCF 
+LOHCandidateVariant="Candidate_"+sOutputPrefix #Intersected SNV with LOH region
+ASLOHOutput="ASLOH_"+sOutputPrefix #
 
 
 
 #Used Tool
-Bedtools=#Path of Bedtools
-IGVtools= #Path of igvtools
+Bedtools="bedtools" #Path of Bedtools
+IGVtools="igvtools" #Path of igvtools
 
 
 
@@ -32,7 +33,7 @@ class SNV:
 		self.sReferenceAllele=""
 		self.sAlternativeAllele=""
 		self.sGenotype=""
-		
+		self.sVariantType=""
 	
 	def ParseSNV(self,sLine):
 		
@@ -43,12 +44,41 @@ class SNV:
 		(sChr,nPosition,sRef,sAlt)=(t[0],t[1],t[3],t[4])
 		sSample=t[-1]
 		sGenotype=sSample.split(":")[0]
+		
 		self.sChromosome=sChr
 		
-		self.nPosition=int(nPosition)
-		self.sReferenceAllele=sRef
-		self.sAlternativeAllele=sAlt
-		self.sGenotype=sGenotype
+		if len(sRef)==len(sAlt):
+			self.sVariantType="SNP"
+			self.sReferenceAllele=sRef
+			self.sAlternativeAllele=sAlt
+			self.sGenotype=sGenotype
+			self.nPosition=int(nPosition)
+		
+		
+		
+		elif len(sRef)>len(sAlt):
+			self.sVariantType="Del"
+			sNewRef=sRef[len(sAlt):]
+			sNewAlt="-"
+			self.sReferenceAllele=sNewRef
+			self.sAlternativeAllele=sNewAlt
+			self.sGenotype=sGenotype
+			self.nPosition=int(nPosition)+len(sAlt)
+		elif len(sRef)<len(sAlt):
+			self.sVariantType="Ins"
+			sNewRef="-"
+			sNewAlt=sAlt[len(sRef):]
+			self.sReferenceAllele=sNewRef
+			self.sAlternativeAllele=sNewAlt
+			self.sGenotype=sGenotype
+			self.nPosition=int(nPosition)
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		if sChr=="X":
@@ -162,7 +192,9 @@ def Igvtools(TumorBam,LOHCandidateVariant):
 		
 			sKey="_".join([sChr, nPosition,sRef,sAlt])
 			os.system(IGVtools+" count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
+			#print("igvtools count -w 1 --bases --query chr"+sChr+":"+nPosition+"-"+nPosition+" "+sBamFile+ \
 		" IGVtools/"+ sKey + ".bam.wig hg19")
+		#break
 
 
 
@@ -176,14 +208,16 @@ def ParseIGVtools(sFile,dIGVdict):
 	fp.readline()
 	sLine=fp.readline()
 	sLine=sLine.strip()
+	#17_72436932_G_C_Somatic_het
 	sFile=sFile.split("/")[-1]
 	sKey=sFile.split(".")[0]
 	(sChr,nPosition,sRef,sAlt)=sKey.split("_")
 	try:
 		(nPos, nA, nC, nG, nT, nN, nDel, nIns)=sLine.split("\t")
-		dIGVdict[sKey]={"A":nA,"G":nG,"C":nC,"T":nT}
+		dIGVdict[sKey]={"A":nA,"G":nG,"C":nC,"T":nT,"Del":nDel,"Ins":nIns}
 	except ValueError:
-		dIGVdict[sKey]="Deletion"
+		dIGVdict[sKey]="noRead"
+	
 	
 	
 	
@@ -197,14 +231,17 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 	Igvtools(TumorBam,LOHCandidateVariant)
 	
 	dIGVdict=dict()
+	#IGVtools/"+sID+"/"+ sKey + ".bam.wig
 	lIGVToolsFiles=glob.glob("IGVtools/"+"*.bam.wig")
 	
 	for sIgvcall in lIGVToolsFiles:
 		ParseIGVtools(sIgvcall,dIGVdict)
+	#print(dIGVdict["1_17265560_C_T_Germline_het"])
 	fp=open(LOHCandidateVariant)
 	
 	fout=open(ASLOHOutput,"w")
-	fout.write("Chr\tPosition\tRef\tAlt\tSS\tRefreadinTumor\tAltreadinTumor\tAARF\tCNV\n")
+	fout.write("Chr\tPosition\tRef\tAlt\tSS\tRefreadinTumor\tAltreadinTumor\tAARF\tAllele-specific_LOH\n")
+	#for sLin
 	for sLine in fp.readlines():
 		sLine=sLine.strip()
 		t=sLine.split("\t")
@@ -214,33 +251,74 @@ def Allele_specific_LOH_Variant_Calling(TumorBam,LOHCandidateVariant):
 		if sSS=="0/1":
 			try:
 				
-				if not dIGVdict[sKey]=="Deletion":
+				if not dIGVdict[sKey]=="noRead":
 					
-					
-					(sRefinTumor,sAltinTumor)=(dIGVdict[sKey][sRef],dIGVdict[sKey][sAlt])
-					try:
-						if float(sRefinTumor)==0:
+					if sAlt=="-":
+						try:
+							sAltinTumor=dIGVdict[sKey]["Del"]
 							sAllreads=dIGVdict[sKey].values()
 							sTotalRead=sum(map(float,sAllreads))
 							nAARF=float(sAltinTumor)/float(sTotalRead)
-						else:
-							nAARF=float(sAltinTumor)/(float(sRefinTumor)+float(sAltinTumor))
-						if "0/1" in sSS:
-						
+							sRefinTumor=str(float(sTotalRead)-float(sAltinTumor))
 							if nAARF<0.2:
 								sSSwithCNV="RLOH"
 							elif nAARF>0.8:
 								sSSwithCNV="LOH"
 							else:
 								sSSwithCNV=sSS
-						else:
-							pass
-						fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
-						fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
-					except ZeroDivisionError:
-						pass	
+							fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
+							fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
+						except ZeroDivisionError:
+							pass	
+					
+						
+					elif sRef=="-":
+						try:
+							sAltinTumor=dIGVdict[sKey]["Ins"]
+							sAllreads=dIGVdict[sKey].values()
+							sTotalRead=sum(map(float,sAllreads))
+							nAARF=float(sAltinTumor)/float(sTotalRead)
+							sRefinTumor=str(float(sTotalRead)-float(sAltinTumor))
+							if nAARF<0.2:
+								sSSwithCNV="RLOH"
+							elif nAARF>0.8:
+								sSSwithCNV="LOH"
+							else:
+								sSSwithCNV=sSS
+							fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
+							fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
+						except ZeroDivisionError:
+							pass	
+							
+							
+							
+					else:
+						(sRefinTumor,sAltinTumor)=(dIGVdict[sKey][sRef],dIGVdict[sKey][sAlt])
+						try:
+							if float(sRefinTumor)==0:
+								sAllreads=dIGVdict[sKey].values()
+								sTotalRead=sum(map(float,sAllreads))
+								nAARF=float(sAltinTumor)/float(sTotalRead)
+							else:
+								nAARF=float(sAltinTumor)/(float(sRefinTumor)+float(sAltinTumor))
+							
+							
+							if nAARF<0.2:
+								sSSwithCNV="RLOH"
+							elif nAARF>0.8:
+								sSSwithCNV="LOH"
+							else:
+								sSSwithCNV=sSS
+							fout.write("{0}\t".format("\t".join([sChr, nPosition,sRef,sAlt,sSS])))
+							fout.write("{0}\n".format("\t".join([sRefinTumor,sAltinTumor,str(nAARF),sSSwithCNV])))
+						except ZeroDivisionError:
+							pass	
+					
+					
+					
 				else:
 					pass
+					#fout.write("{0}\n".format("\t".join(["0","0","0",sSS])))
 			except KeyError:
 				pass
 		
